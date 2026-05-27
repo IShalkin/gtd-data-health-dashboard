@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GTD — Kvalita dat & pokrytí</title>
+<title>GTD · Datová pitva — Czechitas Snowflake Workshop</title>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
 <style>
   :root{
@@ -55,10 +55,11 @@
   .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 
   .audit-table{width:100%;border-collapse:collapse;font-size:14px}
-  .audit-table th, .audit-table td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--border)}
+  .audit-table th, .audit-table td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
   .audit-table th{font-size:11px;letter-spacing:2px;color:var(--ink-dim);text-transform:uppercase;font-weight:600}
   .audit-table tr:last-child td{border-bottom:0}
   .audit-table .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .audit-table code{background:rgba(76,201,240,0.08);color:var(--accent-2);padding:1px 6px;border-radius:4px;font-size:12px}
   .pill.bad{background:rgba(255,107,107,.15);color:#ff8a8a;border:1px solid rgba(255,107,107,.3)}
   .pill.warn{background:rgba(255,209,102,.15);color:#ffd166;border:1px solid rgba(255,209,102,.3)}
   .pill.ok{background:rgba(6,214,160,.15);color:#06d6a0;border:1px solid rgba(6,214,160,.3)}
@@ -76,27 +77,27 @@
 <div class="wrap">
 
 <header class="hero">
-  <div class="eyebrow">Czechitas · Snowflake Workshop · GTD 1970–2020</div>
-  <h1>Kvalita dat a pokrytí <span class="accent">Global Terrorism Database</span></h1>
+  <div class="eyebrow">Czechitas · Snowflake Workshop</div>
+  <h1>GTD: <span class="accent">datová pitva</span> jednoho světového datasetu</h1>
   <p class="lede">Jeden datový soubor — pět příběhů. Co v něm je, co chybí, který rok zmizel, kde není znám pachatel a proč číselník zemí váží dvakrát víc, než by měl. Tohle není reportáž o terorismu — je to reportáž o <strong>datech</strong>.</p>
-  <p class="source">Zdroj: <a href="https://www.start.umd.edu/gtd/" target="_blank">START / University of Maryland · Global Terrorism Database</a> · pole <code>DBSOURCE</code> = "START Primary Collection"</p>
+  <p class="source">Zdroj: <a href="https://www.start.umd.edu/gtd/" target="_blank">Global Terrorism Database (GTD), START · University of Maryland</a> · spojeno přes Snowflake, schema <code>COURSES.SCH_TEROR</code>, hlavní tabulka <code>TEROR_FULLDATA</code>.</p>
 </header>
 
 <div class="kpis">
   <div class="kpi info"><div class="v">209 706</div><div class="l">Událostí</div></div>
   <div class="kpi info"><div class="v">1970–2020</div><div class="l">Období · 50 let</div></div>
-  <div class="kpi info"><div class="v">204</div><div class="l">Zemí · 12 regionů</div></div>
-  <div class="kpi warn"><div class="v">44 %</div><div class="l">Pachatel = "Unknown"</div></div>
-  <div class="kpi warn"><div class="v">74 %</div><div class="l">MOTIVE = NULL</div></div>
+  <div class="kpi info"><div class="v">205 / 12</div><div class="l">Zemí · 12 regionů</div></div>
+  <div class="kpi warn"><div class="v">43,8 %</div><div class="l">Pachatel = "Unknown"</div></div>
+  <div class="kpi warn"><div class="v">73,7 %</div><div class="l">MOTIVE = NULL</div></div>
 </div>
 
 <section>
   <div class="section-title">
     <span class="num">01 — Pokrytí</span>
-    <h2>Kolik událostí je zaznamenáno po letech</h2>
+    <h2>Jak hustý je dataset v čase?</h2>
   </div>
   <div class="card">
-    <p class="insight">Dvojí osa: <strong>sloupce</strong> — počet incidentů, <strong>křivka</strong> — počet zabitých. Prudký nárůst po roce 2011 — Sýrie, Irák, Jemen, Boko Haram. A <strong>v roce 1993 nejsou data vůbec</strong> — START fyzicky ztratil primární záznamy.</p>
+    <p class="insight">Dataset roste s časem — nejvíc událostí má 2014 (vrchol ISIL · Boko Haram), ale celý <strong>rok 1993 chybí</strong> kvůli ztracené záloze v 90. letech. To je školní příklad, proč se před analýzou dělá <code>SELECT IYEAR, COUNT(*) GROUP BY IYEAR</code> — díra by jinak vypadala jako mírový rok.</p>
     <div id="coverage" style="height:440px"></div>
   </div>
 </section>
@@ -104,10 +105,10 @@
 <section>
   <div class="section-title">
     <span class="num">02 — Kvalita dat</span>
-    <h2>Podíl chybějících hodnot v polích × dekádách</h2>
+    <h2>Co v jednotlivých dekádách chybí</h2>
   </div>
   <div class="card">
-    <p class="insight">Barva — % prázdných hodnot. <strong>SUMMARY</strong> a <strong>MOTIVE</strong> byly v 70.–90. letech téměř vždy prázdné (metodika GTD to tehdy nevyžadovala). Po roce 2000 začal START doplňovat SUMMARY, ale MOTIVE zůstal vzácný. <strong>GNAME = "Unknown"</strong> naopak <em>roste</em> v čase — atribuce začala být v éře ISIL a anonymních útoků složitější.</p>
+    <p class="insight">Heatmapa procenta NULL/Unknown podle dekády a sloupce. Texty (<code>MOTIVE</code>, <code>SUMMARY</code>) chybí téměř všude před rokem 2000 — historická data byla doplněna jen čísly. Zato <strong>pachatel <code>GNAME = 'Unknown'</code> roste s dekádou</strong> — v 2000s je to 56 %. To není chyba dat, to je vlastnost světa.</p>
     <div id="heatmap" style="height:380px"></div>
   </div>
 </section>
@@ -115,22 +116,22 @@
 <section>
   <div class="section-title">
     <span class="num">03 — Rozložení</span>
-    <h2>Nerovnoměrnost: kde, jak a čím</h2>
+    <h2>Kdo, jak, čím — top kategorie</h2>
   </div>
   <div class="grid-3">
     <div class="card">
-      <p class="card-title">Top 15 zemí</p>
-      <p class="insight">První tři země představují <strong>≈ 30 % všech událostí</strong>.</p>
+      <p class="card-title">Top 15 zemí podle událostí</p>
+      <p class="insight">Jen <strong>5 zemí</strong> tvoří nadpoloviční většinu datasetu. Velká Británie figuruje vysoko hlavně kvůli Severnímu Irsku v 70.–90. letech.</p>
       <div id="topcountries" style="height:520px"></div>
     </div>
     <div class="card">
-      <p class="card-title">Typy útoků</p>
-      <p class="insight">Bombing + Armed Assault = <strong>70 %</strong>.</p>
+      <p class="card-title">Typ útoku</p>
+      <p class="insight"><code>ATTACKTYPE1_TXT</code> má jen 9 hodnot — pěkný číselník. <strong>Bombový útok</strong> tvoří skoro polovinu událostí.</p>
       <div id="attacktypes" style="height:520px"></div>
     </div>
     <div class="card">
-      <p class="card-title">Typy zbraní</p>
-      <p class="insight">Výbušniny a střelné zbraně — téměř všechno.</p>
+      <p class="card-title">Typ zbraně (log osa)</p>
+      <p class="insight">Dlouhý ocas: od 103 475 výbušnin po <strong>13 radiologických</strong>. Log škála je jediný způsob, jak na jednom obrázku ukázat 4 řády.</p>
       <div id="weapontypes" style="height:520px"></div>
     </div>
   </div>
@@ -139,10 +140,10 @@
 <section>
   <div class="section-title">
     <span class="num">04 — Regiony</span>
-    <h2>Události vs. smrtnost podle regionů</h2>
+    <h2>Smrtnost vs. počet — kde je nejhůř</h2>
   </div>
   <div class="card">
-    <p class="insight">Osa X — počet událostí, osa Y — počet zabitých. <strong>Subsaharská Afrika</strong> vyčnívá nahoru: méně incidentů, ale jsou smrtelnější (Boko Haram, Al-Šabáb). <strong>Západní Evropa</strong> naopak — hodně událostí s nízkou smrtností.</p>
+    <p class="insight">Bublina = počet zabitých, barva = smrtnost (zabití/událost). <strong>Subsaharská Afrika</strong> má sice méně událostí než Blízký východ, ale výrazně vyšší smrtnost na jednu událost. <strong>Západní Evropa</strong> má hodně útoků, ale skoro nejnižší smrtnost — bombičky bez obětí.</p>
     <div id="regions" style="height:480px"></div>
   </div>
 </section>
@@ -150,43 +151,96 @@
 <section>
   <div class="section-title">
     <span class="num">05 — Audit integrity</span>
-    <h2>Co jsme našli porovnáním tabulek</h2>
+    <h2>Co by měl analytik nejdřív opravit</h2>
   </div>
   <div class="card">
-    <p class="insight">Porovnali jsme všech 10 tabulek schématu <code>SCH_TEROR</code> mezi sebou a hledali jsme typické vady: duplikáty, sentinelové hodnoty místo NULL, neodpovídající verze, špatné datové typy.</p>
+    <p class="insight">Sedm reálných problémů, které dataset má. Pro každý: co se zjistilo, jak vážné to je, a co s tím (SQL hint pro studenty workshopu).</p>
     <table class="audit-table">
       <thead><tr><th>Kontrola</th><th>Co bylo zjištěno</th><th>Závažnost</th><th>Co s tím</th></tr></thead>
       <tbody>
-        <tr><td><code>COUNTRY_DIRTYDATA</code> vs <code>COUNTRY</code></td><td>408 řádků proti 204 — <strong>každá země je duplikována přesně dvakrát</strong></td><td><span class="pill bad">kritické</span></td><td><code>SELECT DISTINCT</code> nebo <code>ROW_NUMBER() OVER(PARTITION BY name)</code></td></tr>
-        <tr><td><code>TEROR2_OLD</code> vs <code>TEROR2</code></td><td>26 828 vs 84 341 — starý snapshot, chybí v něm 2/3 dat</td><td><span class="pill warn">pozor</span></td><td>nepoužívat <code>_OLD</code> v produkčních dotazech</td></tr>
-        <tr><td><code>NKILL = NULL</code></td><td>12 527 událostí (6 %) bez počtu obětí</td><td><span class="pill warn">pozor</span></td><td><code>COALESCE(NKILL, 0)</code> nebo explicitně vyloučit</td></tr>
-        <tr><td>Sentinel <code>-99</code></td><td>v polích <code>NPERPS</code>, <code>PROPVALUE</code> aj. — znamená "neznámé"</td><td><span class="pill warn">pozor</span></td><td><code>NULLIF(field, -99)</code> před agregací</td></tr>
-        <tr><td><code>GNAME = 'Unknown'</code></td><td>91 906 událostí (44 %) — pachatel není znám</td><td><span class="pill bad">kritické</span></td><td>vyloučit z analýzy top-pachatelů</td></tr>
-        <tr><td><code>DOUBTTERR = 1</code></td><td>35 235 (17 %) — sami autoři pochybují, zda jde o teroristický čin</td><td><span class="pill warn">pozor</span></td><td>filtrovat v přísných scénářích</td></tr>
-        <tr><td>Typ <code>LATITUDE</code> / <code>LONGITUDE</code></td><td>uloženy jako <code>VARCHAR(255)</code></td><td><span class="pill warn">pozor</span></td><td><code>TRY_CAST(... AS FLOAT)</code> pro geo-dotazy</td></tr>
-        <tr><td>Rok 1993</td><td>0 událostí — data fyzicky ztracena START</td><td><span class="pill bad">kritické</span></td><td>neinterpretovat jako "rok bez teroru"</td></tr>
+        <tr>
+          <td><strong>Chybějící rok</strong><br><code>IYEAR</code></td>
+          <td>Rok <strong>1993</strong> v datech vůbec není — START přiznává ztrátu záloh. Mezera se v <code>GROUP BY IYEAR</code> projeví jako "mírový rok".</td>
+          <td><span class="pill bad">kritické</span></td>
+          <td>Při kreslení časové řady doplnit <code>1993</code> jako řádek s <code>NULL</code> a vizuálně označit. Nepoužívat lineární interpolaci.</td>
+        </tr>
+        <tr>
+          <td><strong>Duplicitní číselník zemí</strong><br><code>COUNTRY_DIRTYDATA</code></td>
+          <td>Tabulka má <strong>408 řádků</strong>, ale jen <strong>204 unikátních jmen</strong> — každá země je tam <strong>2×</strong>. Naivní <code>JOIN</code> tím zdvojnásobí počet faktů.</td>
+          <td><span class="pill bad">kritické</span></td>
+          <td>Použít čistou tabulku <code>COUNTRY</code>, nebo deduplikovat: <code>SELECT DISTINCT NAME FROM COUNTRY_DIRTYDATA</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Špatný typ pro souřadnice</strong><br><code>LATITUDE</code>, <code>LONGITUDE</code></td>
+          <td>Oba sloupce jsou <code>VARCHAR(255)</code> — ne číslo. Aritmetika selže, řazení je lexikografické (<code>"10"</code> &lt; <code>"2"</code>).</td>
+          <td><span class="pill warn">pozor</span></td>
+          <td>Přetypovat ve view: <code>LATITUDE::FLOAT</code>. V produkci přidat sloupec a backfillnout.</td>
+        </tr>
+        <tr>
+          <td><strong>Snapshoty se rozcházejí</strong><br><code>TEROR2</code> vs <code>TEROR2_OLD</code></td>
+          <td><code>TEROR2</code> = <strong>84 341</strong>, <code>TEROR2_OLD</code> = <strong>26 828</strong>, <code>TEROR_FULLDATA</code> = <strong>209 706</strong>. Tři verze, žádný README.</td>
+          <td><span class="pill warn">pozor</span></td>
+          <td>Vždy začít na <code>TEROR_FULLDATA</code>. Stará verze je dobrá jen na audit historie.</td>
+        </tr>
+        <tr>
+          <td><strong>Pachatel chybí v 44 % záznamů</strong><br><code>GNAME = 'Unknown'</code></td>
+          <td><strong>91 906 / 209 706</strong> událostí má <code>GNAME = 'Unknown'</code>. Není to NULL — je to <em>sentinel string</em>.</td>
+          <td><span class="pill warn">pozor</span></td>
+          <td>Při filtraci skupin používat <code>WHERE GNAME != 'Unknown' AND GNAME IS NOT NULL</code>. Sentinel pozná jen ten, kdo ví, že tam je.</td>
+        </tr>
+        <tr>
+          <td><strong>Volný text MOTIVE prázdný</strong><br><code>MOTIVE</code></td>
+          <td><strong>154 648 / 209 706</strong> = 73,7 % motivů je <code>NULL</code>. V 80. letech to bylo 99 %, v 2000s jen 1 % — kódovací standard se změnil.</td>
+          <td><span class="pill warn">pozor</span></td>
+          <td>Volné texty nikdy neagregovat naivně. Pro NLP filtrovat <code>WHERE MOTIVE IS NOT NULL</code> a vědět, že ztrácíš 3/4 dat.</td>
+        </tr>
+        <tr>
+          <td><strong>Konzistence ATTACKTYPE2</strong><br><code>ATTACKTYPE2</code></td>
+          <td>Sloupec je <code>FLOAT</code>, ostatní <code>ATTACKTYPE1/3</code> jsou <code>NUMBER(38,0)</code>. Drobnost, ale rozbije <code>UNION</code>.</td>
+          <td><span class="pill ok">ok</span></td>
+          <td>Sjednotit typ ve view: <code>CAST(ATTACKTYPE2 AS NUMBER)</code>. Žádná ztráta dat.</td>
+        </tr>
       </tbody>
     </table>
   </div>
 </section>
 
 <footer>
-  Dashboard postaven na agregátech z <code>COURSES.SCH_TEROR</code> · Snowflake account GN56074 · Plotly 2.35 · single-file HTML
+  Czechitas · Snowflake Data-Quality Workshop · Data: GTD 1970–2020 · Vytvořeno s Plotly &amp; trochou kávy ☕
 </footer>
 
 </div>
 
 <script>
+// === 1) Yearly coverage (1970–2020, missing 1993) ===
 const yearly = [
-{y:1970,e:651,k:174},{y:1971,e:471,k:173},{y:1972,e:567,k:485},{y:1973,e:473,k:370},{y:1974,e:581,k:539},{y:1975,e:740,k:617},{y:1976,e:923,k:674},{y:1977,e:1319,k:457},{y:1978,e:1526,k:1459},{y:1979,e:2662,k:2100},
-{y:1980,e:2661,k:4391},{y:1981,e:2586,k:4851},{y:1982,e:2543,k:5135},{y:1983,e:2870,k:9444},{y:1984,e:3495,k:10450},{y:1985,e:2914,k:7094},{y:1986,e:2860,k:4976},{y:1987,e:3183,k:6482},{y:1988,e:3720,k:7206},{y:1989,e:4324,k:8152},
-{y:1990,e:3886,k:7036},{y:1991,e:4685,k:8454},{y:1992,e:5071,k:9745},{y:1993,e:0,k:0},{y:1994,e:3456,k:7690},{y:1995,e:3081,k:6103},{y:1996,e:3058,k:6966},{y:1997,e:3198,k:10906},{y:1998,e:934,k:4688},{y:1999,e:1396,k:3394},
-{y:2000,e:1823,k:4394},{y:2001,e:1912,k:7729},{y:2002,e:1330,k:4797},{y:2003,e:1280,k:3317},{y:2004,e:1164,k:5716},{y:2005,e:2017,k:6343},{y:2006,e:2757,k:9316},{y:2007,e:3250,k:12825},{y:2008,e:4801,k:9244},{y:2009,e:4723,k:9277},
-{y:2010,e:4827,k:7829},{y:2011,e:5075,k:8246},{y:2012,e:8525,k:15498},{y:2013,e:12047,k:22279},{y:2014,e:16960,k:44648},{y:2015,e:15138,k:38993},{y:2016,e:14051,k:35239},{y:2017,e:11364,k:26897},{y:2018,e:9853,k:23291},{y:2019,e:8537,k:20412},{y:2020,e:8438,k:22847}
+  {y:1970,e:651,k:174},{y:1971,e:471,k:173},{y:1972,e:567,k:485},{y:1973,e:473,k:370},{y:1974,e:581,k:539},
+  {y:1975,e:740,k:617},{y:1976,e:923,k:674},{y:1977,e:1319,k:457},{y:1978,e:1526,k:1459},{y:1979,e:2662,k:2100},
+  {y:1980,e:2661,k:4391},{y:1981,e:2586,k:4851},{y:1982,e:2543,k:5135},{y:1983,e:2870,k:9444},{y:1984,e:3495,k:10450},
+  {y:1985,e:2914,k:7094},{y:1986,e:2860,k:4976},{y:1987,e:3183,k:6482},{y:1988,e:3720,k:7206},{y:1989,e:4324,k:8152},
+  {y:1990,e:3886,k:7036},{y:1991,e:4685,k:8454},{y:1992,e:5071,k:9745},
+  {y:1993,e:0,k:0},
+  {y:1994,e:3456,k:7690},{y:1995,e:3081,k:6103},{y:1996,e:3058,k:6966},{y:1997,e:3198,k:10906},{y:1998,e:934,k:4688},{y:1999,e:1396,k:3394},
+  {y:2000,e:1823,k:4394},{y:2001,e:1912,k:7729},{y:2002,e:1330,k:4797},{y:2003,e:1280,k:3317},{y:2004,e:1164,k:5716},
+  {y:2005,e:2017,k:6343},{y:2006,e:2757,k:9316},{y:2007,e:3250,k:12825},{y:2008,e:4801,k:9244},{y:2009,e:4723,k:9277},
+  {y:2010,e:4827,k:7829},{y:2011,e:5075,k:8246},{y:2012,e:8525,k:15498},{y:2013,e:12047,k:22279},{y:2014,e:16960,k:44648},
+  {y:2015,e:15138,k:38993},{y:2016,e:14051,k:35239},{y:2017,e:11364,k:26897},{y:2018,e:9853,k:23291},{y:2019,e:8537,k:20412},
+  {y:2020,e:8438,k:22847}
 ];
+const MISSING_YEAR = 1993;
+const PEAK = {year:2014, events:16960, label:"Vrchol 2014<br>ISIL · Boko Haram"};
 
-const decadeLabels = ['1970s','1980s','1990s','2000s','2010s','2020s'];
-const fieldLabels  = ['MOTIVE NULL','SUMMARY NULL','LATITUDE NULL','NKILL NULL','GNAME=Unknown','DOUBTTERR=1','CITY Unknown'];
+// === 2) Heatmap data (rows = fields, cols = decades) ===
+const decadeLabels = ['70. léta','80. léta','90. léta','2000s','2010s','2020s'];
+const fieldLabels  = [
+  "MOTIVE = NULL",
+  "SUMMARY = NULL",
+  "LATITUDE = NULL",
+  "NKILL = NULL",
+  "GNAME = 'Unknown'",
+  "DOUBTTERR = 1",
+  "CITY = 'Unknown'"
+];
 const heatmapZ = [
   [93.9, 99.0, 91.3,  1.0, 76.1, 83.5],
   [91.2, 99.0, 91.2,  0.0,  0.0,  0.0],
@@ -194,30 +248,70 @@ const heatmapZ = [
   [12.2, 14.4,  1.6,  1.4,  5.1,  6.8],
   [27.5, 30.5, 42.1, 55.7, 47.9, 32.3],
   [11.6, 18.5, 14.6, 11.7, 17.9, 25.1],
-  [ 4.2,  6.7,  8.3,  5.3,  4.7,  4.1],
+  [ 4.2,  6.7,  8.3,  5.3,  4.7,  4.1]
 ];
 
+// === 3) Distributions ===
 const topCountries = [
-  ["Irák",27521],["Afghánistán",18920],["Pákistán",15504],["Indie",13929],["Kolumbie",8915],
-  ["Filipíny",8271],["Peru",6111],["Jemen",6027],["Nigérie",5550],["Velká Británie",5513],
-  ["Salvador",5320],["Somálsko",5317],["Turecko",4485],["Thajsko",4201],["Španělsko",3255]
+  ['Irák',           27521],
+  ['Afghánistán',    18920],
+  ['Pákistán',       15504],
+  ['Indie',          13929],
+  ['Kolumbie',        8915],
+  ['Filipíny',        8271],
+  ['Peru',            6111],
+  ['Jemen',           6027],
+  ['Nigérie',         5550],
+  ['Velká Británie',  5513],
+  ['Salvador',        5320],
+  ['Somálsko',        5317],
+  ['Turecko',         4485],
+  ['Thajsko',         4201],
+  ['Španělsko',       3255]
 ];
 const attackTypes = [
-  ["Bombing/Explosion",98158],["Armed Assault",49553],["Assassination",21539],
-  ["Hostage (Kidnap)",14045],["Facility/Infra",12325],["Unknown",10942],
-  ["Unarmed Assault",1229],["Hostage (Barricade)",1156],["Hijacking",759]
+  ['Bombový útok',           98158],
+  ['Ozbrojený útok',         49553],
+  ['Atentát',                21539],
+  ['Únos',                   14045],
+  ['Útok na infrastrukturu', 12325],
+  ['Neznámé',                10942],
+  ['Útok beze zbraně',        1229],
+  ['Zadržování rukojmí',      1156],
+  ['Únos dopravního prostř.',  759]
 ];
 const weaponTypes = [
-  ["Explosives",103475],["Firearms",67648],["Unknown",20203],["Incendiary",13133],
-  ["Melee",4307],["Chemical",347],["Sabotage",187],["Vehicle",186],["Other",136],["Biological",36],["Fake",35],["Radiological",13]
-];
-const regions = [
-  ["Blízký východ & S.Afrika",58252,149739],["Jižní Asie",54725,132037],["Subsaharská Afrika",23746,100557],
-  ["Jižní Amerika",19846,29388],["Západní Evropa",17328,6709],["Jihovýchodní Asie",14498,17109],
-  ["Střední Amerika",10386,28730],["Východní Evropa",5326,7483],["Severní Amerika",3847,5153],
-  ["Východní Asie",847,1154],["Střední Asie",580,1084],["Australasie",325,205]
+  ['Výbušniny',         103475],
+  ['Střelné zbraně',     67648],
+  ['Neznámé',            20203],
+  ['Zápalné zbraně',     13133],
+  ['Chladné zbraně',      4307],
+  ['Chemické',             347],
+  ['Sabotážní zařízení',   187],
+  ['Vozidlo',              186],
+  ['Jiné',                 136],
+  ['Biologické',            36],
+  ['Falešné zbraně',        35],
+  ['Radiologické',          13]
 ];
 
+// === 4) Regions ===
+const regions = [
+  ['Blízký východ & S.Afrika', 58252, 149739],
+  ['Jižní Asie',               54725, 132037],
+  ['Subsaharská Afrika',       23746, 100557],
+  ['Jižní Amerika',            19846,  29388],
+  ['Západní Evropa',           17328,   6709],
+  ['Jihovýchodní Asie',        14498,  17109],
+  ['Střední Amerika',          10386,  28730],
+  ['Východní Evropa',           5326,   7483],
+  ['Severní Amerika',           3847,   5153],
+  ['Východní Asie',              847,   1154],
+  ['Střední Asie',               580,   1084],
+  ['Australasie',                325,    205]
+];
+
+// === plotting ===
 const baseLayout = {
   paper_bgcolor:'rgba(0,0,0,0)',
   plot_bgcolor:'rgba(0,0,0,0)',
@@ -232,8 +326,7 @@ Plotly.newPlot('coverage',[
   {
     type:'bar', x: yearly.map(d=>d.y), y: yearly.map(d=>d.e),
     name:'Události',
-    marker:{color: yearly.map(d=>d.y===1993 ? '#ff6b6b' : '#4cc9f0'),
-            line:{width:0}},
+    marker:{color: yearly.map(d=>d.y===MISSING_YEAR ? '#ff6b6b' : '#4cc9f0'), line:{width:0}},
     hovertemplate:'<b>%{x}</b><br>Události: %{y:,}<extra></extra>'
   },
   {
@@ -248,23 +341,20 @@ Plotly.newPlot('coverage',[
   yaxis:{...grid,title:'Události',titlefont:{color:'#4cc9f0'}},
   yaxis2:{...grid,title:'Zabití',titlefont:{color:'#ffd166'},overlaying:'y',side:'right',showgrid:false},
   legend:{orientation:'h',y:1.12,x:0,bgcolor:'rgba(0,0,0,0)'},
-  annotations:[
-    {x:1993,y:0,xref:'x',yref:'y',text:'1993 — data<br>ztracena START',
-     showarrow:true,arrowhead:2,arrowcolor:'#ff6b6b',ax:0,ay:-90,
-     font:{color:'#ff8a8a',size:11},bgcolor:'rgba(255,107,107,0.12)',
-     bordercolor:'#ff6b6b',borderwidth:1,borderpad:6},
-    {x:2014,y:16960,xref:'x',yref:'y',text:'Vrchol 2014<br>ISIL · Boko Haram',
-     showarrow:true,arrowhead:2,arrowcolor:'#06d6a0',ax:-60,ay:-40,
-     font:{color:'#06d6a0',size:11}}
+  annotations: [
+    {x:MISSING_YEAR,y:0,xref:'x',yref:'y',text:'1993 — data<br>ztracena START',
+       showarrow:true,arrowhead:2,arrowcolor:'#ff6b6b',ax:0,ay:-90,
+       font:{color:'#ff8a8a',size:11},bgcolor:'rgba(255,107,107,0.12)',
+       bordercolor:'#ff6b6b',borderwidth:1,borderpad:6},
+    {x:PEAK.year,y:PEAK.events,xref:'x',yref:'y',text:PEAK.label,
+       showarrow:true,arrowhead:2,arrowcolor:'#06d6a0',ax:-60,ay:-40,
+       font:{color:'#06d6a0',size:11}}
   ]
 },cfg);
 
 Plotly.newPlot('heatmap',[{
   type:'heatmap', z: heatmapZ, x: decadeLabels, y: fieldLabels,
-  colorscale:[
-    [0,'#06d6a0'],[0.2,'#4cc9f0'],[0.4,'#5b8def'],
-    [0.6,'#a16bff'],[0.8,'#ff6b6b'],[1,'#c1121f']
-  ],
+  colorscale:[[0,'#06d6a0'],[0.2,'#4cc9f0'],[0.4,'#5b8def'],[0.6,'#a16bff'],[0.8,'#ff6b6b'],[1,'#c1121f']],
   zmin:0, zmax:100,
   hovertemplate:'<b>%{y}</b><br>%{x}<br>Chybí: %{z} %<extra></extra>',
   colorbar:{title:'% NULL',titleside:'right',tickfont:{color:'#a6b0d6'},titlefont:{color:'#a6b0d6'},outlinecolor:'rgba(0,0,0,0)'},
@@ -272,45 +362,32 @@ Plotly.newPlot('heatmap',[{
 }],{
   ...baseLayout,
   xaxis:{...grid,side:'top'}, yaxis:{...grid,autorange:'reversed'},
-  margin:{l:160,r:60,t:40,b:30}
+  margin:{l:170,r:60,t:40,b:30}
 },cfg);
 
-Plotly.newPlot('topcountries',[{
-  type:'bar', orientation:'h',
-  x: topCountries.map(d=>d[1]).reverse(),
-  y: topCountries.map(d=>d[0]).reverse(),
-  marker:{
-    color: topCountries.map(d=>d[1]).reverse(),
-    colorscale:[[0,'#1a2348'],[1,'#ff6b6b']],
-    showscale:false,line:{width:0}
-  },
-  text: topCountries.map(d=>d[1].toLocaleString('cs-CZ')).reverse(),
-  textposition:'outside', textfont:{color:'#e8edff',size:11},
-  hovertemplate:'<b>%{y}</b><br>%{x:,} událostí<extra></extra>'
-}],{
-  ...baseLayout,
-  xaxis:{...grid,showticklabels:false}, yaxis:{...grid,tickfont:{size:11}},
-  margin:{l:120,r:50,t:10,b:20}
-},cfg);
+function hbar(id, data, gradEnd){
+  Plotly.newPlot(id,[{
+    type:'bar', orientation:'h',
+    x: data.map(d=>d[1]).reverse(),
+    y: data.map(d=>d[0]).reverse(),
+    marker:{
+      color: data.map(d=>d[1]).reverse(),
+      colorscale:[[0,'#1a2348'],[1,gradEnd]],
+      showscale:false,line:{width:0}
+    },
+    text: data.map(d=>d[1].toLocaleString('cs-CZ')).reverse(),
+    textposition:'outside', textfont:{color:'#e8edff',size:11},
+    hovertemplate:'<b>%{y}</b><br>%{x:,}<extra></extra>'
+  }],{
+    ...baseLayout,
+    xaxis:{...grid,showticklabels:false}, yaxis:{...grid,tickfont:{size:11}},
+    margin:{l:140,r:60,t:10,b:20}
+  },cfg);
+}
+hbar('topcountries', topCountries, '#ff6b6b');
+hbar('attacktypes',  attackTypes,  '#ffd166');
 
-Plotly.newPlot('attacktypes',[{
-  type:'bar', orientation:'h',
-  x: attackTypes.map(d=>d[1]).reverse(),
-  y: attackTypes.map(d=>d[0]).reverse(),
-  marker:{
-    color: attackTypes.map(d=>d[1]).reverse(),
-    colorscale:[[0,'#1a2348'],[1,'#ffd166']],
-    showscale:false,line:{width:0}
-  },
-  text: attackTypes.map(d=>d[1].toLocaleString('cs-CZ')).reverse(),
-  textposition:'outside', textfont:{color:'#e8edff',size:11},
-  hovertemplate:'<b>%{y}</b><br>%{x:,}<extra></extra>'
-}],{
-  ...baseLayout,
-  xaxis:{...grid,showticklabels:false}, yaxis:{...grid,tickfont:{size:11}},
-  margin:{l:140,r:50,t:10,b:20}
-},cfg);
-
+// weapons gets a log x-axis — the long tail spans 4 orders of magnitude
 Plotly.newPlot('weapontypes',[{
   type:'bar', orientation:'h',
   x: weaponTypes.map(d=>d[1]).reverse(),
@@ -326,7 +403,7 @@ Plotly.newPlot('weapontypes',[{
 }],{
   ...baseLayout,
   xaxis:{...grid,type:'log',showticklabels:false}, yaxis:{...grid,tickfont:{size:11}},
-  margin:{l:120,r:50,t:10,b:20}
+  margin:{l:140,r:60,t:10,b:20}
 },cfg);
 
 const lethal = regions.map(r=>r[2]/r[1]);
