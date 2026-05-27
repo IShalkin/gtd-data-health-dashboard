@@ -1,0 +1,69 @@
+-- Agregáty použité v dashboardu
+-- Schema: COURSES.SCH_TEROR
+
+-- 1) Pokrytí po letech (události + zabití)
+SELECT IYEAR AS year,
+       COUNT(*) AS events,
+       SUM(NKILL) AS killed,
+       SUM(NWOUND) AS wounded,
+       COUNT(DISTINCT COUNTRY_TXT) AS countries
+FROM TEROR_FULLDATA
+GROUP BY IYEAR
+ORDER BY IYEAR;
+
+-- 2) Heatmap kvality dat (% NULL/Unknown po dekádách)
+WITH d AS (SELECT (FLOOR(IYEAR/10)*10) AS decade, * FROM TEROR_FULLDATA)
+SELECT decade,
+       COUNT(*) AS total,
+       ROUND(100.0 * SUM(CASE WHEN MOTIVE IS NULL THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_motive_null,
+       ROUND(100.0 * SUM(CASE WHEN SUMMARY IS NULL THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_summary_null,
+       ROUND(100.0 * SUM(CASE WHEN LATITUDE IS NULL THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_lat_null,
+       ROUND(100.0 * SUM(CASE WHEN NKILL IS NULL THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_nkill_null,
+       ROUND(100.0 * SUM(CASE WHEN GNAME = 'Unknown' THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_gname_unknown,
+       ROUND(100.0 * SUM(CASE WHEN DOUBTTERR = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_doubtterr,
+       ROUND(100.0 * SUM(CASE WHEN CITY IS NULL OR CITY = 'Unknown' THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_city_unknown
+FROM d
+GROUP BY decade
+ORDER BY decade;
+
+-- 3) Top 15 zemí
+SELECT COUNTRY_TXT AS country, COUNT(*) AS events, SUM(NKILL) AS killed
+FROM TEROR_FULLDATA
+GROUP BY COUNTRY_TXT
+ORDER BY events DESC
+LIMIT 15;
+
+-- 4) Typy útoků
+SELECT ATTACKTYPE1_TXT AS attack, COUNT(*) AS events
+FROM TEROR_FULLDATA
+WHERE ATTACKTYPE1_TXT IS NOT NULL
+GROUP BY ATTACKTYPE1_TXT
+ORDER BY events DESC;
+
+-- 5) Typy zbraní
+SELECT WEAPTYPE1_TXT AS weapon, COUNT(*) AS events
+FROM TEROR_FULLDATA
+WHERE WEAPTYPE1_TXT IS NOT NULL
+GROUP BY WEAPTYPE1_TXT
+ORDER BY events DESC;
+
+-- 6) Regiony — události vs. oběti
+SELECT REGION_TXT AS region, COUNT(*) AS events, SUM(NKILL) AS killed
+FROM TEROR_FULLDATA
+WHERE REGION_TXT IS NOT NULL
+GROUP BY REGION_TXT
+ORDER BY events DESC;
+
+-- 7) Audit: COUNTRY_DIRTYDATA má dvakrát víc řádků než COUNTRY
+SELECT
+  (SELECT COUNT(*) FROM COUNTRY_DIRTYDATA) AS total_rows,
+  (SELECT COUNT(DISTINCT NAME) FROM COUNTRY_DIRTYDATA) AS distinct_names,
+  (SELECT COUNT(*) FROM (SELECT NAME FROM COUNTRY_DIRTYDATA GROUP BY NAME HAVING COUNT(*) > 1)) AS names_duplicated;
+
+-- 8) Top známí pachatelé (vyloučen Unknown)
+SELECT GNAME, COUNT(*) AS events, SUM(NKILL) AS killed
+FROM TEROR_FULLDATA
+WHERE GNAME IS NOT NULL AND GNAME != 'Unknown'
+GROUP BY GNAME
+ORDER BY events DESC
+LIMIT 10;
